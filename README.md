@@ -80,6 +80,17 @@ Each helper's docstring states the Janet behaviour it corrects. Summary:
   doubles, so `(* 330 (/ 7 5))` lands one ulp below 462 - it *prints*
   `462` yet `(= v 462)` is false; near-integer counts need `math/round`.
 
+### Alternatives
+
+- **[janet-sh](https://github.com/andrewchambers/janet-sh)** - a shell
+  DSL: `(sh/$ cat ,path | sort | uniq)` with interpolation, pipelines and
+  capture forms. It is a syntax layer for writing shell lines; this module
+  is a set of primitives for building them safely from Janet values -
+  quoting, argv boundaries, exit codes.
+- **[janet-process](https://github.com/andrewchambers/janet-process)** -
+  child-process supervision: spawn with redirects, signals, waiting, GC
+  integration. For managing long-lived processes, not one-shot commands.
+
 ## Install
 
 Clone anywhere, then either:
