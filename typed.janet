@@ -18,6 +18,11 @@
   (def arg-spec (get spec :args))
   (def ret-spec (get spec :ret))
   (unless arg-spec (errorf "defn/typed %s: spec is missing :args" (string name)))
+  # (& rest) forms must fail here with attribution: when lengths happen to
+  # match, the generated guards otherwise die as a cryptic "unknown symbol &"
+  (when (find |(= $ '&) args)
+    (errorf "defn/typed %s: varargs are not supported - fixed arity only"
+            (string name)))
   (unless (= (length args) (length arg-spec))
     (errorf "defn/typed %s: %d args but spec has %d - compile-time arity error"
              (string name) (length args) (length arg-spec)))

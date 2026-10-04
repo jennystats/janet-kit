@@ -66,6 +66,20 @@
 (assert (not (nil? (string/find "missing :args" missing-args)))
         "empty spec errors on :args too")
 
+# compile-time: varargs are rejected with a clear message (a matched-length
+# (& rest) form used to surface as a cryptic "unknown symbol &")
+(var varargs-err nil)
+(try (eval ~(defn/typed vrest {:args [:number :number] :ret :any} [& rest] 42))
+  ([e] (set varargs-err e)))
+(assert (not (nil? (string/find "varargs" varargs-err)))
+        "(& rest) forms are rejected at compile time")
+(set varargs-err nil)
+(try (eval ~(defn/typed vrest2 {:args [:number :number :number] :ret :any}
+              [a & rest] a))
+  ([e] (set varargs-err e)))
+(assert (not (nil? (string/find "varargs" varargs-err)))
+        "[a & rest] forms are rejected at compile time")
+
 # :ret is optional by design: omitted (or nil) means no return check
 (var no-ret-err nil)
 (try (eval ~(defn/typed no-ret {:args [:number]} [x] (string "v" x)))

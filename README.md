@@ -30,12 +30,14 @@ Developed and tested on Janet 1.42.
 - Type spec: `{:args [:string :number] :ret :string}`.
 - Known types: `:nil :boolean :number :string :buffer :keyword :symbol
   :table :struct :array :tuple :function :fiber :bytes :any`.
-- Arity mismatch between arglist and spec, unknown type keywords and a
-  missing `:args` key are **compile-time** errors; `:ret` is optional
-  (omit it, or pass nil, for no return check). Value guards run at call
-  time.
+- Arity mismatch between arglist and spec, unknown type keywords, a
+  missing `:args` key and varargs (`& rest` arglists) are **compile-time**
+  errors; `:ret` is optional (omit it, or pass nil, for no return check).
+  Value guards run at call time.
 - Guard predicates resolve at macro expansion, so a guard costs one direct
-  predicate call - about 310ns per call for 3 guards on Janet 1.42.
+  predicate call - about 310ns per call with 3 argument guards on Janet
+  1.42 (about 400ns with a return guard, versus about 40ns for an
+  unguarded call).
 
 ### Alternatives
 
