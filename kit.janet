@@ -9,29 +9,56 @@
 
 (import ./typed :prefix "")
 
-(def CAPTURE-FILE "/tmp/kit-capture.txt")
-
 (defn/typed sh {:args [:string] :ret :number} [cmd]
   # os/execute takes an argv tuple with NO PATH lookup and rejects bare
   # strings - route every shell command through /bin/sh.
   (os/execute ["/bin/sh" "-c" cmd]))
 
-(defn/typed sh-capture {:args [:string] :ret :string} [cmd]
-  # os/spawn has no pipe slots on any flag - capture
-  # command output via temp-file redirect. Result is trimmed.
-  (os/execute ["/bin/sh" "-c" (string cmd " > " CAPTURE-FILE)])
-  (string/trim (string (slurp CAPTURE-FILE))))
-
 (defn/typed sh-quote {:args [:string] :ret :string} [s]
   # Quote one string for a /bin/sh command line. os/execute via sh has no
   # argv boundaries - arguments with spaces MUST be re-quoted when
   # reconstructing a command (verified: paths with spaces re-split).
-  (string "\"" (string/replace-all "\"" "\\\"" (string/replace-all "\\" "\\\\" s)) "\""))
+  # $ and backtick are escaped because they expand inside double quotes -
+  # a quoted "$(cmd)" used to EXECUTE. NUL cannot cross execve; reject it
+  # here, at the quoting boundary, instead of at os/execute without
+  # attribution.
+  (when-let [i (string/find (string/from-bytes 0) s)]
+    (errorf "sh-quote: NUL byte at index %d - argv strings cannot carry NUL" i))
+  (string "\""
+          (string/replace-all "`" "\\`"
+          (string/replace-all "$" "\\$"
+          (string/replace-all "\"" "\\\""
+          (string/replace-all "\\" "\\\\" s))))
+          "\""))
 
 (defn/typed sh-join {:args [:tuple] :ret :string} [parts]
   # Rebuild a shell command from an argv tuple, each part quoted.
-  # Limitation: no $/backtick escaping - do not pass hostile strings.
   (string/join (map sh-quote parts) " "))
+
+(defn- capture-file []
+  # unique per call: a fixed /tmp path let concurrent scripts corrupt each
+  # other's captures, and pre-created symlinks clobber arbitrary files
+  (string "/tmp/kit-capture-" (gensym) "-" (os/clock)))
+
+(defn/typed sh-capture {:args [:string] :ret :string} [cmd]
+  # os/spawn has no pipe slots on any flag - capture command output via
+  # temp-file redirect, trimmed. `set -C` refuses a pre-existing entry
+  # (symlink-clobber defense); `exec >` scopes the redirect to the WHOLE
+  # command - an appended `>` would capture only the last statement and
+  # leak the rest to the terminal. Failing commands capture "" (exit
+  # codes come from sh); stderr passes through to the Janet process.
+  (let [f (capture-file)]
+    (def code
+      (os/execute ["/bin/sh" "-c"
+                   (string "set -C; exec > " (sh-quote f) "; " cmd)]))
+    (def out
+      (try (string (slurp f))
+        ([_]
+          (errorf "sh-capture: capture file %s missing after command (exit %d)"
+                  f code))))
+    # a failed rm must not mask a good capture - an orphan is inert
+    (try (os/rm f) ([_] nil))
+    (string/trim out)))
 
 (defn/typed slurp-string {:args [:string] :ret :string} [path]
   # slurp returns a BUFFER and `=` is type-strict -

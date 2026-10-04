@@ -1,4 +1,5 @@
 (import ../kit :prefix "")
+(import ../typed :prefix "")
 
 (def FIXTURE "/tmp/janet-kit-smoke.txt")
 (def LINK "/tmp/janet-kit-smoke-link")
@@ -10,26 +11,61 @@
 # sh-capture - stdout via temp file, trimmed
 (assert (= (sh-capture "printf hi") "hi") "sh-capture")
 (assert (= (sh-capture "printf 'hi\\n\\n'") "hi") "sh-capture trims trailing whitespace")
+(assert (= (sh-capture "echo one; echo two") "one\ntwo")
+        "sh-capture captures the whole command, not just the last statement")
+(assert (= (sh-capture "exit 3") "") "a failing command captures empty output")
+(assert (= (sh-capture "no-such-cmd-xyz-404") "")
+        "a missing command captures empty output (the exit code comes from sh)")
+(assert (= (sh-capture "echo hi # trailing comment") "hi")
+        "a trailing comment does not eat the redirect")
+
+# the capture file is unique per call and removed after reading: the old
+# fixed path could be pre-created as a symlink (clobbering an arbitrary
+# file) and let two concurrent scripts corrupt each other's captures
+(spit "/tmp/kit-capture.txt" "sentinel")
+(assert (= (sh-capture "echo fresh") "fresh") "sh-capture")
+(assert (= (string (slurp "/tmp/kit-capture.txt")) "sentinel")
+        "the old fixed capture path is no longer written")
+(os/rm "/tmp/kit-capture.txt")
+(loop [_ :range [0 50]] (sh-capture "echo x"))
+(assert (< (length (filter |(string/has-prefix? "kit-capture-" $) (os/dir "/tmp"))) 5)
+        "capture files are cleaned up after reading")
 
 # sh-quote - exact quoted output. Double quotes neutralise spaces, quotes,
-# ; and |; $ and backticks still expand inside them (documented
-# limitation - do not pass hostile strings).
+# backslashes, $ and backticks - hostile strings stay data. A NUL byte
+# cannot cross execve and is rejected with its position.
 (assert (= (sh-quote "a b c") "\"a b c\"") "sh-quote wraps spaces")
 (assert (= (sh-quote "") "\"\"") "sh-quote wraps the empty string")
 (assert (= (sh-quote "say \"hi\"") "\"say \\\"hi\\\"\"") "sh-quote escapes embedded quotes")
 (assert (= (sh-quote "a\\b") "\"a\\\\b\"") "sh-quote doubles backslashes")
 (assert (= (sh-quote "a\\\"b") "\"a\\\\\\\"b\"")
         "sh-quote escapes backslashes before quotes")
-(assert (= (sh-quote "x; rm | y && z $W") "\"x; rm | y && z $W\"")
-        "sh-quote leaves metacharacters inside the quotes")
+(assert (= (sh-quote "x; rm | y && z $W") "\"x; rm | y && z \\$W\"")
+        "sh-quote escapes $ inside the quotes")
+(assert (= (sh-quote "a`b`c") "\"a\\`b\\`c\"") "sh-quote escapes backticks")
+(var nul-err nil)
+(try (sh-quote (string "a" (string/from-bytes 0) "b")) ([e] (set nul-err e)))
+(assert (not (nil? (string/find "NUL byte" nul-err)))
+        "sh-quote rejects a NUL byte with a clear error")
 (assert (= (sh-capture (string "W=expanded; printf %s " (sh-quote "pre $W post")))
-           "pre expanded post")
-        "sh-quote does not neutralise $ (documented limitation)")
+           "pre $W post")
+        "sh-quote neutralises $ - a hostile string stays data")
 
 # sh-join - rebuild an argv-shaped command with every part quoted
 (assert (= (sh-join ["printf" "%s" "a b c"]) "\"printf\" \"%s\" \"a b c\"")
         "sh-join quotes every part")
 (assert (= (sh-join []) "") "sh-join of an empty argv is the empty command")
+
+# hostile strings cross the shell as one byte-identical argv entry
+(defn/typed rt {:args [:string] :ret :string} [s]
+  (sh-capture (string "printf %s " (sh-quote s) " | od -An -v -tx1 | tr -d ' \\n'")))
+(defn/typed hex-of {:args [:string] :ret :string} [s]
+  (string/join (map |(string/format "%02x" $) s) ""))
+(each s ["" "\n" "\t" "\r" (string/from-bytes 1 27 127) "é 中 🚀"
+          "a\\b\\\"c\\" "$W $(id) `id` ${X}" "two words; \"q\" \\ | && rm"
+          "|;&()<>#*?~"]
+  (assert (= (rt s) (hex-of s))
+          (string/format "round-trip byte-identical: %q" s)))
 
 # argv boundaries survive a trip through /bin/sh
 (assert (= (sh-capture (string "printf %s " (sh-quote "two words; \"q\" \\ | && rm")))

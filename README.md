@@ -56,10 +56,17 @@ Each helper's docstring states the Janet behaviour it corrects. Summary:
   rejects bare strings; every command routes through `/bin/sh`. Returns the
   exit code.
 - `sh-capture cmd` - `os/spawn` has no readable pipe slots on any flag;
-  output is captured via temp file. Returns trimmed stdout.
+  stdout is captured via temp file. The file is unique per call, created
+  with noclobber (a pre-existing entry is refused, so a pre-created
+  symlink cannot clobber another file) and removed after reading, and the
+  redirect covers the whole command. Returns trimmed stdout; a failing
+  command captures `""` (use `sh` for the exit code); stderr passes
+  through to the Janet process.
 - `sh-quote s` / `sh-join parts` - rebuilding a shell command by
-  space-joining argv re-splits paths containing spaces; re-quote. `$` and
-  backticks still expand inside the quotes - do not pass hostile strings.
+  space-joining argv re-splits paths containing spaces; re-quote. Double
+  quotes neutralise spaces, quotes, backslashes, `$` and backticks, so
+  hostile strings stay data; a NUL byte is rejected with its position
+  (it cannot cross `execve`).
 - `slurp-string path` - `slurp` returns a *buffer* and `=` is type-strict,
   so byte-identical contents still compare unequal; this returns a string.
 - `script-args` - `(dyn *args*)` includes the script path at index 0; this
