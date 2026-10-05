@@ -140,7 +140,7 @@ janet test/smoke-kit.janet x y
 
 ## License
 
-GPLv3 - see `LICENSE`.
+AGPLv3 - see `LICENSE`.
 
 ## AI assistance
 

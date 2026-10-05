@@ -2,7 +2,7 @@
 (declare-project
   :name "janet-kit"
   :description "Runtime type guards and shell/path/file helpers for Janet utility scripting"
-  :license "GPL-3.0"
+  :license "AGPL-3.0"
   :version "0.1.0")
 
 (declare-source

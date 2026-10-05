@@ -1,4 +1,4 @@
-# kit.janet - correct-pattern helpers for Janet scripting. License: GPLv3 (see LICENSE).
+# kit.janet - correct-pattern helpers for Janet scripting. License: AGPLv3 (see LICENSE).
 # Every helper encodes a real Janet gotcha - the full list is in the README.
 # Depends on ./typed (same package).
 # NOTE: typed is imported MODULE-RELATIVE (./typed), not by name: a script's

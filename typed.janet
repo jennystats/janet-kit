@@ -1,6 +1,6 @@
 # typed.janet - runtime type guards for Janet functions.
 # (defn/typed name {:args [:kw...] :ret :kw} [args] body)
-# Public package: janet-kit. License: GPLv3 (see LICENSE).
+# Public package: janet-kit. License: AGPLv3 (see LICENSE).
 # Design notes: guard cost, error semantics, type keywords - see the README.
 (def preds
   {:nil nil? :boolean boolean? :number number? :string string? :buffer buffer?
