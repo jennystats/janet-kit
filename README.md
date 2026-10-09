@@ -130,13 +130,12 @@ jpm install https://github.com/jennystats/janet-kit
 
 ## Tests
 
-Run from the repo root; tests use module-relative imports and need no
-setup.
-
 ```bash
-janet test/smoke-typed.janet
-janet test/smoke-kit.janet x y
+./run_tests.sh
 ```
+
+Runs both smokes from the repo root; tests use module-relative imports
+and need no setup.
 
 ## License
 
