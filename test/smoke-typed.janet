@@ -88,3 +88,11 @@
 (assert (= (no-ret 1) "v1") "omitted :ret means no return guard")
 
 (print "typed smoke ok")
+
+# docstring hoist (v1.1.1): a leading body string attaches as the docstring
+(defn/typed documented {:args [:number] :ret :number}
+  [x]
+  "Doubles the argument. Hoist-verified."
+  (* 2 x))
+(assert (not (nil? (string/find "Hoist-verified" (or (get (dyn (symbol "documented")) :doc) (dyn (symbol "documented")))))) "docstring hoisted")
+(assert (= (documented 21) 42) "hoisted docstring does not change behaviour")
