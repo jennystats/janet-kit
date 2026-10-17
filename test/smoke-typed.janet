@@ -1,4 +1,4 @@
-(import ../typed :prefix "")
+(import ../jennystats/typed :prefix "")
 
 # clean call
 (defn/typed half {:args [:number] :ret :number} [x] (/ x 2))
