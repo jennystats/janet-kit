@@ -16,13 +16,22 @@ data and statistics packages. Jenny is just Janet.
 Core stdlib only. No native modules, no build step, no C toolchain.
 Developed and tested on Janet 1.42.
 
-## typed - typed function definitions
+## Quick start
 
-All jenny modules install under a `jennystats/` namespace directory:
-`(import jennystats/kit)` - collision-proof against bare-name
-shadowing of core symbols or other packages, by construction. Prefer
-a shorter call prefix? Alias at import (e.g.
-`(import jennystats/kit :as kit)`).
+All jenny modules install under a `jennystats/` namespace directory -
+collision-proof against bare-name shadowing of core symbols or other
+packages, by construction:
+
+```janet
+(import jennystats/kit :as kit)
+
+(kit/sh "git status --short")
+```
+
+`(import jennystats/kit)` works the same with the `kit/` call
+prefix; the `:as` form above is the one used in this repo's tests.
+
+## typed - typed function definitions
 
 ```janet
 (import jennystats/typed :prefix "")
