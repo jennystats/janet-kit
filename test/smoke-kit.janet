@@ -1,5 +1,5 @@
-(import ../kit :prefix "")
-(import ../typed :prefix "")
+(import ../jennystats/kit :prefix "")
+(import ../jennystats/typed :prefix "")
 
 (def FIXTURE "/tmp/janet-kit-smoke.txt")
 (def LINK "/tmp/janet-kit-smoke-link")

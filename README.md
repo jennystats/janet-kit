@@ -8,18 +8,24 @@ rediscovered.
 Part of [Jenny Stats](https://github.com/jennystats), a home for Janet
 data and statistics packages. Jenny is just Janet.
 
-| module            | what                                                | API                          |
-|-------------------|-----------------------------------------------------|------------------------------|
-| `typed.janet`     | runtime type guards for functions                   | `defn/typed` macro           |
-| `kit.janet`       | shell / path / file helpers that encode the gotchas | 11 functions                 |
+| module                    | what                                                | API                          |
+|---------------------------|-----------------------------------------------------|------------------------------|
+| `jennystats/typed.janet` | runtime type guards for functions                   | `defn/typed` macro           |
+| `jennystats/kit.janet`   | shell / path / file helpers that encode the gotchas | 11 functions                 |
 
 Core stdlib only. No native modules, no build step, no C toolchain.
 Developed and tested on Janet 1.42.
 
 ## typed - typed function definitions
 
+All jenny modules install under a `jennystats/` namespace directory:
+`(import jennystats/kit)` - collision-proof against bare-name
+shadowing of core symbols or other packages, by construction. Prefer
+a shorter call prefix? Alias at import (e.g.
+`(import jennystats/kit :as kit)`).
+
 ```janet
-(import typed :prefix "")
+(import jennystats/typed :prefix "")
 
 (defn/typed half {:args [:number] :ret :number} [x] (/ x 2))
 
@@ -107,7 +113,7 @@ Clone anywhere, then either:
 **Import by path** - zero setup, works everywhere:
 
 ```janet
-(import "/path/to/janet-kit/typed")
+(import "/path/to/janet-kit/jennystats/typed")
 ```
 
 **Or make the modules importable by name** - if you keep a Janet module
@@ -115,12 +121,14 @@ directory, symlink the two files into it:
 
 ```bash
 git clone https://github.com/jennystats/janet-kit janet-kit
-ln -s "$(pwd)/janet-kit/typed.janet" "$(pwd)/janet-kit/kit.janet" /your/janet/module/dir
+mkdir -p /your/janet/module/dir/jennystats
+ln -s "$(pwd)/janet-kit/jennystats/typed.janet" "$(pwd)/janet-kit/jennystats/kit.janet" /your/janet/module/dir/jennystats
 ```
 
-Then `(import typed :prefix "")` and
-`(import kit :prefix "")` work everywhere. Both modules install together -
-kit's dependency on typed is module-relative and resolves after install.
+Then `(import jennystats/typed :prefix "")` and
+`(import jennystats/kit :prefix "")` work everywhere. Both modules
+install together - kit's dependency on typed is module-relative and
+resolves after install.
 
 **Or with jpm** - installs into your module path:
 
