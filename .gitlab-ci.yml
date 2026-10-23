@@ -1,0 +1,9 @@
+# .gitlab-ci.yml - thin wrapper over the shared gate template.
+# Lives in jennystats/ci-templates; see its README for the
+# template inputs, the legs, and the schedule jobs.
+include:
+  - project: jennystats/ci-templates
+    ref: main
+    file: /templates/gate.yml
+    inputs:
+      project_name: "janet-kit"
