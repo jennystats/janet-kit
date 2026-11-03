@@ -1,7 +1,8 @@
 # typed.janet - runtime type guards for Janet functions.
-# (defn/typed name {:args [:kw...] :ret :kw} [args] "docstring?" body)
-# A leading body string attaches as the defn docstring; the guards still
-# wrap the remaining body.
+# (defn/typed name {:args [:kw...] :ret :kw} [params] "docstring?" body)
+# The docstring goes after [params], as a leading body string hoisted
+# above the guards. A docstring between the spec and [params] does not
+# compile.
 # Public package: janet-kit. License: AGPLv3 (see LICENSE).
 # Design notes: guard cost, error semantics, type keywords - see the README.
 (def preds

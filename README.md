@@ -45,8 +45,12 @@ prefix; the `:as` form above is the one used in this repo's tests.
 - Type spec: `{:args [:string :number] :ret :string}`.
 - Known types: `:nil :boolean :number :string :buffer :keyword :symbol
   :table :struct :array :tuple :function :fiber :bytes :any`.
+- Docstring: place it after `[params]`, as a leading body string -
+  `(defn/typed half {:args [:number] :ret :number} [x] "docstring" ...)`.
+  A docstring between the spec and `[params]` does not compile
+  (`spec is missing :args`).
 - Arity mismatch between arglist and spec, unknown type keywords, a
-  missing `:args` key and varargs (`& rest` arglists) are **compile-time**
+  missing `:args` key and varargs (`& rest` arglists) are compile-time
   errors; `:ret` is optional (omit it, or pass nil, for no return check).
   Value guards run at call time.
 - Guard predicates resolve at macro expansion, so a guard costs one direct
