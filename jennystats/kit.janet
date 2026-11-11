@@ -5,7 +5,7 @@
 # `(setdyn *syspath* ...)` self-heal is invisible to nested module imports
 # (each module loads in its own env), so a by-name import here breaks under
 # the syspath fallback. Relative imports resolve against this file's
-# directory, which always contains typed.janet. (Verified gotcha, 2026-09-30.)
+# directory, which always contains typed.janet.
 
 (import ./typed :prefix "")
 
@@ -31,7 +31,7 @@ helper encodes a real Janet gotcha - the README carries the full list.")
   the byte index - argv strings cannot carry NUL."
   # Quote one string for a /bin/sh command line. os/execute via sh has no
   # argv boundaries - arguments with spaces MUST be re-quoted when
-  # reconstructing a command (verified: paths with spaces re-split).
+  # reconstructing a command: paths with spaces re-split.
   # $ and backtick are escaped because they expand inside double quotes -
   # a quoted "$(cmd)" used to EXECUTE. NUL cannot cross execve; reject it
   # here, at the quoting boundary, instead of at os/execute without
@@ -125,7 +125,7 @@ helper encodes a real Janet gotcha - the README carries the full list.")
   instead of throwing - an existence check built on try alone is
   vacuously true for every path."
   # os/stat RETURNS NIL for missing paths (does not throw) - check the
-  # result, or every existence test is vacuously true (caught 2026-10-01).
+  # result, or every existence test is vacuously true.
   (try (not (nil? (os/stat p))) ([_] false)))
 
 (defn/typed dbl {:args [:any] :ret :number} [x]

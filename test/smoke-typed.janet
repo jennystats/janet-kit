@@ -89,7 +89,7 @@
 
 (print "typed smoke ok")
 
-# docstring hoist (v1.1.1): a leading body string attaches as the docstring
+# docstring hoist: a leading body string attaches as the docstring
 (defn/typed documented {:args [:number] :ret :number}
   [x]
   "Doubles the argument. Hoist-verified."

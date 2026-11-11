@@ -1,6 +1,6 @@
 # janet-kit
 
-Two small modules for Janet utility scripting. Each helper exists because
+Three small modules for Janet utility scripting. Each helper exists because
 the underlying Janet API has a behaviour that is easy to get wrong - the
 helper is the workaround, written down so it does not have to be
 rediscovered.
@@ -12,6 +12,7 @@ data and statistics packages. Jenny is just Janet.
 |---------------------------|-----------------------------------------------------|------------------------------|
 | `jennystats/typed.janet` | runtime type guards for functions                   | `defn/typed` macro           |
 | `jennystats/kit.janet`   | shell / path / file helpers that encode the gotchas | 11 functions                 |
+| `jennystats/assert.janet` | error assertions for testament                     | 5 functions                  |
 
 Core stdlib only. No native modules, no build step, no C toolchain.
 Developed and tested on Janet 1.42.
@@ -119,27 +120,67 @@ Each helper's docstring states the Janet behaviour it corrects. Summary:
   child-process supervision: spawn with redirects, signals, waiting, GC
   integration. For managing long-lived processes, not one-shot commands.
 
+## assert - error assertions for testament
+
+[Testament](https://github.com/pyrmont/testament) matches an error message
+**exactly**. A prose contract says a call "raises `ERR_BAD_KEY`"; the
+implementation raises `ERR_BAD_KEY: duplicate`; testament's
+`assert-thrown-message` fails on a correct implementation. This module
+supplies the assertions testament does not have.
+
+```janet
+(import jennystats/assert :as a)
+(import testament :as t)
+
+(t/deftest "duplicate key is refused"
+  (t/assert-expr (a/assert-raises-with "ERR_BAD_KEY" (fn [] (add k v)))))
+
+(t/deftest "unknown key is accepted"
+  (t/assert-expr (a/assert-not-raises (fn [] (add k v)))))
+```
+
+Five functions: `assert-raises-with`, `assert-raises`,
+`assert-not-raises`, and the two predicates they build on, `raises` and
+`error-message`. All return booleans and raise nothing, so they drop into
+`assert-expr` or into any other harness.
+
+Two behaviours to know:
+
+- `assert-raises-with` matches a **prefix**, because a contract sentence
+  names an error class and implementations append detail.
+- Every helper takes a **function and invokes it**. Testament's
+  `assert-thrown` takes a *form*, so `(t/assert-thrown (fn [] ...))`
+  watches the closure being created rather than the call, and reports
+  "No error thrown" whatever the code does.
+
+Testament is optional: the module imports nothing but `./typed`, so a
+project that has not adopted testament can still use the predicates.
+The repo's own `test/smoke-assert-testament.janet` proves the integration
+and is skipped by `run_tests.sh` when testament is not installed.
+
 ## Install
 
 Clone anywhere, then either:
 
-**Import by path** - zero setup, works everywhere:
+**Import by path** - zero setup, works everywhere. Include the `.janet`
+extension: a path without one is read as a module name.
 
 ```janet
-(import "/path/to/janet-kit/jennystats/typed")
+(import "/path/to/janet-kit/jennystats/typed.janet")
 ```
 
 **Or make the modules importable by name** - if you keep a Janet module
-directory, symlink the two files into it:
+directory, symlink the three files into it:
 
 ```bash
 git clone https://github.com/jennystats/janet-kit janet-kit
 mkdir -p /your/janet/module/dir/jennystats
-ln -s "$(pwd)/janet-kit/jennystats/typed.janet" "$(pwd)/janet-kit/jennystats/kit.janet" /your/janet/module/dir/jennystats
+ln -s "$(pwd)"/janet-kit/jennystats/{typed,kit,assert}.janet /your/janet/module/dir/jennystats
 ```
 
-Then `(import jennystats/typed :prefix "")` and
-`(import jennystats/kit :prefix "")` work everywhere. Both modules
+Then `(import jennystats/typed :prefix "")`,
+`(import jennystats/kit :prefix "")` and
+`(import jennystats/assert :as a)` work everywhere. All three modules
 install together - kit's dependency on typed is module-relative and
 resolves after install.
 
@@ -155,8 +196,9 @@ jpm install https://github.com/jennystats/janet-kit
 ./run_tests.sh
 ```
 
-Runs both smokes from the repo root; tests use module-relative imports
-and need no setup.
+Runs the smokes from the repo root; tests use module-relative imports and
+need no setup. The testament integration smoke runs only when testament is
+installed, since it is an optional dependency.
 
 ## License
 
