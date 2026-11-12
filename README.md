@@ -15,7 +15,7 @@ data and statistics packages. Jenny is just Janet.
 | `jennystats/assert.janet` | error assertions for testament                     | 5 functions                  |
 
 Core stdlib only. No native modules, no build step, no C toolchain.
-Developed and tested on Janet 1.42.
+Developed and tested on Janet 1.43.
 
 ## Quick start
 
